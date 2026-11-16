@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.10"
 }
 
 android {
@@ -37,6 +38,12 @@ android {
 }
 
 dependencies {
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-navigation3:2.11.0")
+    implementation("androidx.navigation3:navigation3-runtime:1.2.1")
+    implementation("androidx.navigation3:navigation3-ui:1.2.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)

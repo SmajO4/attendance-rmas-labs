@@ -141,7 +141,12 @@ fun ProfessorScreen(modifier: Modifier = Modifier) {
     // Zadatak 10 - PREDICT za prethodnu verziju s remember:
     // Rekreiranje Activityja vraca openWindow na null ("Open: none").
     // rememberSaveable obnavlja otvoreni prozor nakon rotacije.
-    var openWindow by rememberSaveable {
+    // Lab 6 - Dio 0, PREDVIDI: namjerno koristimo remember za prozor.
+    // Poslije rotacije prozor se zatvara, a rucno dodana prijava nestaje.
+    // Pretraga i Only late ostaju uz rememberSaveable. Forma se vise ne
+    // prikazuje jer je openWindow null. Sve podatke ne mozemo samo staviti
+    // u rememberSaveable: CheckIn nije podrzan za Bundle (Lab 5, zadatak 9).
+    var openWindow by remember {
         mutableStateOf<Window?>(null)
     }
 
