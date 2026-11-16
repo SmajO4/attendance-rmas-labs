@@ -135,7 +135,7 @@ fun CheckInCard(
 }
 
 // Zadatak 11: roditelj je jedini vlasnik stanja otvorenog prozora.
-// Zadatak 12: sazetak i kartice koriste istu listu za otvoreni prozor.
+// Lab 5: sazetak broji cijeli prozor, a pretraga filtrira samo kartice.
 @Composable
 fun ProfessorScreen(modifier: Modifier = Modifier) {
     // Zadatak 10 - PREDICT za prethodnu verziju s remember:
@@ -147,9 +147,14 @@ fun ProfessorScreen(modifier: Modifier = Modifier) {
 
     // Lab 5, Dio 0: zamjena liste obavjestava Compose o novim prijavama.
     var checkIns by remember { mutableStateOf(sampleCheckIns) }
+    var query by rememberSaveable { mutableStateOf("") }
 
-    val visibleCheckIns = checkIns.filter {
+    val windowCheckIns = checkIns.filter {
         it.window == openWindow
+    }
+    // Lab 5 - Zadatak 2: prazna pretraga odgovara svakom imenu.
+    val visibleCheckIns = windowCheckIns.filter {
+        it.student.name.contains(query, ignoreCase = true)
     }
 
     Column(
@@ -167,13 +172,28 @@ fun ProfessorScreen(modifier: Modifier = Modifier) {
         )
 
         AttendanceSummary(
-            checkIns = visibleCheckIns,
+            checkIns = windowCheckIns,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        // Lab 5 - Zadatak 1, PREDVIDI:
+        // Sa onQueryChange = {} kucanje ne mijenja query, pa polje
+        // ostaje na zadanoj vrijednosti. Kontrola samo javlja novi tekst;
+        // roditelj ga mora spremiti u state da bi se prikaz promijenio.
+        SearchField(
+            query = query,
+            onQueryChange = { query = it },
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
         if (openWindow == null) {
             Text(
                 text = "Open a window to see check-ins",
+                modifier = Modifier.padding(16.dp)
+            )
+        } else if (visibleCheckIns.isEmpty()) {
+            Text(
+                text = "No check-ins match the filter",
                 modifier = Modifier.padding(16.dp)
             )
         } else {
