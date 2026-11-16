@@ -90,6 +90,7 @@ fun Avatar(
 @Composable
 fun CheckInCard(
     checkIn: CheckIn,
+    allCheckIns: List<CheckIn>,
     modifier: Modifier = Modifier
 ) {
     // Zadatak 10 - PREDICT prije rotacije:
@@ -119,7 +120,7 @@ fun CheckInCard(
                     ),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    sampleCheckIns
+                    allCheckIns
                         .filter { it.student == checkIn.student }
                         .forEach {
                             Text(
@@ -144,7 +145,10 @@ fun ProfessorScreen(modifier: Modifier = Modifier) {
         mutableStateOf<Window?>(null)
     }
 
-    val visibleCheckIns = sampleCheckIns.filter {
+    // Lab 5, Dio 0: zamjena liste obavjestava Compose o novim prijavama.
+    var checkIns by remember { mutableStateOf(sampleCheckIns) }
+
+    val visibleCheckIns = checkIns.filter {
         it.window == openWindow
     }
 
@@ -177,6 +181,7 @@ fun ProfessorScreen(modifier: Modifier = Modifier) {
                 key(checkIn.student.id, checkIn.window) {
                     CheckInCard(
                         checkIn = checkIn,
+                        allCheckIns = checkIns,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
@@ -206,7 +211,10 @@ fun CheckInRowsPreview() {
 fun CheckInCardPreview() {
     Attendance1Theme {
         Surface {
-            CheckInCard(sampleCheckIns[1])
+            CheckInCard(
+                checkIn = sampleCheckIns[1],
+                allCheckIns = sampleCheckIns
+            )
         }
     }
 }
