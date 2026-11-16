@@ -2,8 +2,12 @@ package ba.untz.attendance1
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -80,6 +84,54 @@ fun LateOnlySwitchOffPreview() {
     Attendance1Theme {
         Surface {
             LateOnlySwitch(onlyLate = false, onOnlyLateChange = {})
+        }
+    }
+}
+
+// Lab 5 - Zadatak 5: vrsta statusa; minute kasnjenja biramo zasebno.
+enum class StatusKind(val label: String) {
+    ON_TIME("On time"),
+    LATE("Late"),
+    ABSENT("Absent")
+}
+
+// PREDVIDI: Ako svako dugme ima svoj Boolean state, vise dugmadi
+// moze biti odabrano istovremeno. To vise nije radio grupa.
+// Jedna zajednicka vrijednost StatusKind osigurava samo jedan izbor.
+@Composable
+fun StatusPicker(
+    selected: StatusKind,
+    onSelect: (StatusKind) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.selectableGroup()) {
+        StatusKind.entries.forEach { option ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectable(
+                        selected = option == selected,
+                        onClick = { onSelect(option) },
+                        role = Role.RadioButton
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = option == selected,
+                    onClick = null
+                )
+                Text(option.label)
+            }
+        }
+    }
+}
+
+@Preview(name = "Status - Late", showBackground = true, widthDp = 380)
+@Composable
+fun StatusPickerPreview() {
+    Attendance1Theme {
+        Surface {
+            StatusPicker(selected = StatusKind.LATE, onSelect = {})
         }
     }
 }
