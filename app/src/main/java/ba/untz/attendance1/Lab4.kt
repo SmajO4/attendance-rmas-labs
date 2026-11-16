@@ -220,6 +220,20 @@ fun ProfessorScreen(modifier: Modifier = Modifier) {
                 }
             }
         }
+
+        openWindow?.let { window ->
+            ManualCheckInForm(
+                window = window,
+                existing = checkIns,
+                // Lab 5 - Zadatak 8, PREDVIDI:
+                // checkIns je List, pa nema add. Plus pravi novu listu,
+                // a dodjela u state obavjestava Compose da osvjezi ekran.
+                // add na obicnoj MutableList ne bi bio posmatrana promjena;
+                // sam po sebi ne bi pokrenuo ponovno iscrtavanje.
+                onSave = { checkIns = checkIns + it },
+                modifier = Modifier.padding(16.dp)
+            )
+        }
     }
 }
 
