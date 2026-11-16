@@ -145,7 +145,18 @@ fun ProfessorScreen(modifier: Modifier = Modifier) {
         mutableStateOf<Window?>(null)
     }
 
-    // Lab 5, Dio 0: zamjena liste obavjestava Compose o novim prijavama.
+    // Lab 5 - Zadatak 9, PREDVIDI:
+    // Rotacija rekreira Activity. openWindow, query, onlyLate i nacrt forme
+    // ostaju jer koriste rememberSaveable (enum, String, Boolean i Int).
+    // Dodane prijave nestaju: remember ne prezivljava rekreiranje Activityja,
+    // pa checkIns ponovo dobije sampleCheckIns. U middle Late: 3 postaje Late: 2.
+    // Eksperiment: rememberSaveable za checkIns ne rjesava problem jer
+    // CheckIn objekti nisu podrzani za cuvanje u Bundle bez vlastitog Savera
+    // ili odgovarajuce serijalizacije. Nakon eksperimenta vracamo remember.
+    // PROVJERENO: rotacija cuva middle, query="s", onlyLate=true i IB108
+    // u nacrtu, a sazetak se vraca sa Late: 3 na Late: 2.
+    // rememberSaveable eksperiment pri cuvanju stanja zavrsava greskom:
+    // IllegalArgumentException: Parcel: unknown type for value CheckIn(...).
     var checkIns by remember { mutableStateOf(sampleCheckIns) }
     var query by rememberSaveable { mutableStateOf("") }
     var onlyLate by rememberSaveable { mutableStateOf(false) }
