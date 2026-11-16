@@ -134,122 +134,93 @@ fun CheckInCard(
     }
 }
 
-// Zadatak 11: roditelj je jedini vlasnik stanja otvorenog prozora.
-// Lab 5: sazetak broji cijeli prozor, a pretraga filtrira samo kartice.
+// LAB6, Zadatak 5 - PREDVIDI prije rotacije:
+// Otvoreni middle, pretraga, Only late i dodani Tarik ostaju u ViewModelu.
+// Isti ViewModel prezivi rotaciju, pa nema novog "ViewModel created: RMAS-5".
+// Ekran prima stanje i dogadjaje od rute; cuva samo stanje prikaza (scroll).
 @Composable
-fun ProfessorScreen(modifier: Modifier = Modifier) {
-    // Zadatak 10 - PREDICT za prethodnu verziju s remember:
-    // Rekreiranje Activityja vraca openWindow na null ("Open: none").
-    // rememberSaveable obnavlja otvoreni prozor nakon rotacije.
-    // Lab 6 - Dio 0, PREDVIDI: namjerno koristimo remember za prozor.
-    // Poslije rotacije prozor se zatvara, a rucno dodana prijava nestaje.
-    // Pretraga i Only late ostaju uz rememberSaveable. Forma se vise ne
-    // prikazuje jer je openWindow null. Sve podatke ne mozemo samo staviti
-    // u rememberSaveable: CheckIn nije podrzan za Bundle (Lab 5, zadatak 9).
-    var openWindow by remember {
-        mutableStateOf<Window?>(null)
-    }
-
-    // Lab 5 - Zadatak 9, PREDVIDI:
-    // Rotacija rekreira Activity. openWindow, query, onlyLate i nacrt forme
-    // ostaju jer koriste rememberSaveable (enum, String, Boolean i Int).
-    // Dodane prijave nestaju: remember ne prezivljava rekreiranje Activityja,
-    // pa checkIns ponovo dobije sampleCheckIns. U middle Late: 3 postaje Late: 2.
-    // Eksperiment: rememberSaveable za checkIns ne rjesava problem jer
-    // CheckIn objekti nisu podrzani za cuvanje u Bundle bez vlastitog Savera
-    // ili odgovarajuce serijalizacije. Nakon eksperimenta vracamo remember.
-    // PROVJERENO: rotacija cuva middle, query="s", onlyLate=true i IB108
-    // u nacrtu, a sazetak se vraca sa Late: 3 na Late: 2.
-    // rememberSaveable eksperiment pri cuvanju stanja zavrsava greskom:
-    // IllegalArgumentException: Parcel: unknown type for value CheckIn(...).
-    var checkIns by remember { mutableStateOf(sampleCheckIns) }
-    var query by rememberSaveable { mutableStateOf("") }
-    var onlyLate by rememberSaveable { mutableStateOf(false) }
-
-    val windowCheckIns = checkIns.filter {
-        it.window == openWindow
-    }
-    // Lab 5 - Zadatak 2: prazna pretraga odgovara svakom imenu.
-    val visibleCheckIns = windowCheckIns.filter {
-        it.student.name.contains(query, ignoreCase = true) &&
-            (!onlyLate || it.status is CheckInStatus.Late)
-    }
-
+fun ProfessorScreen(
+    state: LectureUiState,
+    onOpen: (Window) -> Unit,
+    onQueryChange: (String) -> Unit,
+    onOnlyLateChange: (Boolean) -> Unit,
+    onSave: (CheckIn) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        WindowControls(
-            openWindow = openWindow,
-            onOpen = {
-                openWindow = it
-                Log.d("RMAS", "now: ${it.label}")
-            }
+        Text(
+            text = "Lecture ${state.lecture.number} · ${state.lecture.title}",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
-
+        WindowControls(openWindow = state.openWindow, onOpen = onOpen)
         AttendanceSummary(
-            checkIns = windowCheckIns,
+            checkIns = state.inWindow,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-
-        // Lab 5 - Zadatak 1, PREDVIDI:
-        // Sa onQueryChange = {} kucanje ne mijenja query, pa polje
-        // ostaje na zadanoj vrijednosti. Kontrola samo javlja novi tekst;
-        // roditelj ga mora spremiti u state da bi se prikaz promijenio.
         SearchField(
-            query = query,
-            onQueryChange = { query = it },
+            query = state.query,
+            onQueryChange = onQueryChange,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-
-        // Lab 5 - Zadatak 4, PREDVIDI:
-        // U middle prozoru pretraga "s" ostavlja Farisa i Selmu (2 kartice).
-        // Hedija Šišić se ne prikazuje: slovo s nije isto sto i š.
-        // ignoreCase zanemaruje velicinu slova, ali ne uklanja dijakritike.
-        // Ukljucivanje Only late ostavlja iste 2 kartice jer oboje kasne.
         LateOnlySwitch(
-            onlyLate = onlyLate,
-            onOnlyLateChange = { onlyLate = it },
+            onlyLate = state.onlyLate,
+            onOnlyLateChange = onOnlyLateChange,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-
-        if (openWindow == null) {
-            Text(
-                text = "Open a window to see check-ins",
-                modifier = Modifier.padding(16.dp)
-            )
-        } else if (visibleCheckIns.isEmpty()) {
-            Text(
-                text = "No check-ins match the filter",
-                modifier = Modifier.padding(16.dp)
-            )
+        if (state.openWindow == null) {
+            Text("Open a window to see check-ins", modifier = Modifier.padding(16.dp))
+        } else if (state.shown.isEmpty()) {
+            Text("No check-ins match the filter", modifier = Modifier.padding(16.dp))
         } else {
-            visibleCheckIns.forEach { checkIn ->
+            state.shown.forEach { checkIn ->
                 key(checkIn.student.id, checkIn.window) {
                     CheckInCard(
                         checkIn = checkIn,
-                        allCheckIns = checkIns,
+                        allCheckIns = state.checkIns,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
             }
         }
-
-        openWindow?.let { window ->
+        state.openWindow?.let { window ->
             ManualCheckInForm(
                 window = window,
-                existing = checkIns,
-                // Lab 5 - Zadatak 8, PREDVIDI:
-                // checkIns je List, pa nema add. Plus pravi novu listu,
-                // a dodjela u state obavjestava Compose da osvjezi ekran.
-                // add na obicnoj MutableList ne bi bio posmatrana promjena;
-                // sam po sebi ne bi pokrenuo ponovno iscrtavanje.
-                onSave = { checkIns = checkIns + it },
+                existing = state.checkIns,
+                onSave = onSave,
                 modifier = Modifier.padding(16.dp)
             )
         }
+    }
+}
+
+@Preview(name = "LAB6 - bez otvorenog prozora", showBackground = true, widthDp = 380, heightDp = 800)
+@Composable
+fun ProfessorScreenNoWindowPreview() {
+    Attendance1Theme {
+        ProfessorScreen(
+            state = LectureUiState(lecture = sampleLectures.last(), checkIns = sampleCheckIns),
+            onOpen = {}, onQueryChange = {}, onOnlyLateChange = {}, onSave = {}
+        )
+    }
+}
+
+@Preview(name = "LAB6 - middle only late", showBackground = true, widthDp = 380, heightDp = 800)
+@Composable
+fun ProfessorScreenMiddleLatePreview() {
+    Attendance1Theme {
+        ProfessorScreen(
+            state = LectureUiState(
+                lecture = sampleLectures.last(),
+                checkIns = sampleCheckIns,
+                openWindow = Window.MIDDLE,
+                onlyLate = true
+            ),
+            onOpen = {}, onQueryChange = {}, onOnlyLateChange = {}, onSave = {}
+        )
     }
 }
 
