@@ -8,15 +8,21 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import ba.untz.attendance1.ui.theme.Attendance1Theme
+import kotlin.math.roundToInt
 
 // Lab 5 - Zadatak 1: stanje dolazi od roditelja, zato nema remember.
 @Composable
@@ -94,10 +100,6 @@ enum class StatusKind(val label: String) {
     LATE("Late"),
     ABSENT("Absent")
 }
-
-// PREDVIDI: Ako svako dugme ima svoj Boolean state, vise dugmadi
-// moze biti odabrano istovremeno. To vise nije radio grupa.
-// Jedna zajednicka vrijednost StatusKind osigurava samo jedan izbor.
 @Composable
 fun StatusPicker(
     selected: StatusKind,
@@ -132,6 +134,60 @@ fun StatusPickerPreview() {
     Attendance1Theme {
         Surface {
             StatusPicker(selected = StatusKind.LATE, onSelect = {})
+        }
+    }
+}
+
+// Lab 5 - Zadatak 6, PREDVIDI:
+// 5, 10, ... 60 je 12 vrijednosti, odnosno 10 tacaka izmedju krajeva.
+// Zato je steps = (60 - 5) / 5 - 1 = 10.
+// steps = 12 daje 14 vrijednosti i razmak 55 / 13 (oko 4.23),
+// pa unutrasnje vrijednosti nisu cijeli brojevi.
+@Composable
+fun LateMinutesSlider(
+    minutes: Int,
+    onMinutesChange: (Int) -> Unit,
+    enabled: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(if (enabled) "Late: $minutes min" else "Late: —")
+        Slider(
+            value = minutes.toFloat(),
+            onValueChange = { onMinutesChange(it.roundToInt()) },
+            valueRange = 5f..60f,
+            steps = 10,
+            enabled = enabled
+        )
+    }
+}
+
+@Preview(name = "Late minutes - omogucen", showBackground = true, widthDp = 380)
+@Composable
+fun LateMinutesSliderEnabledPreview() {
+    // Stanje je u roditelju; sama kontrola nema remember.
+    var minutes by rememberSaveable { mutableStateOf(15) }
+    Attendance1Theme {
+        Surface {
+            LateMinutesSlider(
+                minutes = minutes,
+                onMinutesChange = { minutes = it },
+                enabled = true
+            )
+        }
+    }
+}
+
+@Preview(name = "Late minutes - onemogucen", showBackground = true, widthDp = 380)
+@Composable
+fun LateMinutesSliderDisabledPreview() {
+    Attendance1Theme {
+        Surface {
+            LateMinutesSlider(
+                minutes = 15,
+                onMinutesChange = {},
+                enabled = false
+            )
         }
     }
 }
