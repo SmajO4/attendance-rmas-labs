@@ -148,13 +148,15 @@ fun ProfessorScreen(modifier: Modifier = Modifier) {
     // Lab 5, Dio 0: zamjena liste obavjestava Compose o novim prijavama.
     var checkIns by remember { mutableStateOf(sampleCheckIns) }
     var query by rememberSaveable { mutableStateOf("") }
+    var onlyLate by rememberSaveable { mutableStateOf(false) }
 
     val windowCheckIns = checkIns.filter {
         it.window == openWindow
     }
     // Lab 5 - Zadatak 2: prazna pretraga odgovara svakom imenu.
     val visibleCheckIns = windowCheckIns.filter {
-        it.student.name.contains(query, ignoreCase = true)
+        it.student.name.contains(query, ignoreCase = true) &&
+            (!onlyLate || it.status is CheckInStatus.Late)
     }
 
     Column(
@@ -183,6 +185,17 @@ fun ProfessorScreen(modifier: Modifier = Modifier) {
         SearchField(
             query = query,
             onQueryChange = { query = it },
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        // Lab 5 - Zadatak 4, PREDVIDI:
+        // U middle prozoru pretraga "s" ostavlja Farisa i Selmu (2 kartice).
+        // Hedija Šišić se ne prikazuje: slovo s nije isto sto i š.
+        // ignoreCase zanemaruje velicinu slova, ali ne uklanja dijakritike.
+        // Ukljucivanje Only late ostavlja iste 2 kartice jer oboje kasne.
+        LateOnlySwitch(
+            onlyLate = onlyLate,
+            onOnlyLateChange = { onlyLate = it },
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
